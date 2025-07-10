@@ -14,4 +14,5 @@ resource "azurerm_user_assigned_identity" "example" {
     ignore_changes = [
       tags
     ]
+  }
 }
