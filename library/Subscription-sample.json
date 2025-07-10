@@ -1,0 +1,41 @@
+{
+  "Tracking_Data": {
+    "purpose": "User Assigned Managed Identities",
+    "serviceRequestNumber": "ABC000001234567",
+    "serviceRequestOwner": "Bob Smith",
+    "changeLog": [
+        {
+            "date": "2025-07-10",
+            "description": "Initial creation of User Assigned Managed Identities for 'Sample' subscription.",
+            "author": "Paul Shortt"
+        }
+    ]
+  },
+  "subscription_id": "22222222-3333-4444-5555-666666666666",
+  "tags": {
+    "SourceRepo": "https://dev.azure.com/<DevOps-ORGANISATION>/_git/tf_managed_identities",
+    "Pipeline": "tf_plan - Create Managed Identities per Subscription"
+  },
+  "user_managed_identities": [
+    {
+      "resource_group_name": "<dev_resource_group_name>",
+      "user_mi_name": "<dev_user_mi_name01>",
+      "tags_id_specific": {
+        "SystemCode": "SAMPLE_DEV",
+        "Owner": "bob.smith@fabrikam.com",
+        "ChangeId": "ABC000001234567",
+        "CreatedDate": "2025-07-10"
+      }
+    },
+    {
+      "resource_group_name": "<dev_resource_group_name>",
+      "user_mi_name": "<dev_user_mi_name02>",
+      "tags_id_specific": {
+        "SystemCode": "SAMPLE_DEV",
+        "Owner": "jane.doe@fabrikam.com",
+        "ChangeId": "ABC000001234567",
+        "CreatedDate": "2025-07-10"
+      }
+    }
+  ]
+}
