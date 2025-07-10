@@ -9,4 +9,9 @@ resource "azurerm_user_assigned_identity" "example" {
   name                = var.user_mi_name
   resource_group_name = var.resource_group_name
   tags                = merge({ "ResourceType" = "user-assigned-managed-identity" }, var.tags)
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
 }
