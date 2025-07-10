@@ -1,0 +1,88 @@
+trigger: none
+
+resources:
+  pipelines:
+  - pipeline: sourcePipeline
+    source: 'tf_plan - Create Managed Identities per Subscription'
+    trigger: none  # Optional: Enable automatic triggering
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: 'tf_managed_identities-PRD'
+
+stages:
+- stage: Retrieve_Params
+  displayName: 'Retrieve Parameters from tf_plan Pipeline'
+  jobs:
+  - job: Echo_Params
+    steps:
+      - download: sourcePipeline
+        artifact: pipelineParams
+        displayName: 'Download tf_plan Parameters Artifact'
+
+      - bash: |
+          pwd
+          echo "Reading parameters from tf_plan pipeline:"
+          cat $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json
+          echo "Subscription:"
+          jq -r '.subscription' $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json
+          echo "Custom AzureRM Backend Key:"
+          jq -r '.customBackendKey' $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json
+          echo "Custom Terraform Plan file name:"
+          jq -r '.customPlanName' $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json
+        displayName: 'Print parameters'
+
+      - bash: |
+          echo "##vso[task.setvariable variable=subscription;isOutput=true]$(jq -r '.subscription' $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json)"
+          echo "##vso[task.setvariable variable=customBackendKey;isOutput=true]$(jq -r '.customBackendKey' $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json)"
+          echo "##vso[task.setvariable variable=customPlanName;isOutput=true]$(jq -r '.customPlanName' $(Pipeline.Workspace)/sourcePipeline/pipelineParams/output.json)"
+        displayName: 'Set variables from Pipeline A parameters'
+        name: SetVarsStep
+      
+      - bash: |
+          echo "Subscription: $(SetVarsStep.subscription)"
+          echo "Custom AzureRM Backend Key: $(SetVarsStep.customBackendKey)"
+          echo "Custom Terraform Plan file name: $(SetVarsStep.customPlanName)"
+        displayName: 'Display Variables from tf_plan Pipeline'
+
+- stage: create_managed_ids
+  displayName: 'Create Managed Identities'
+  dependsOn: Retrieve_Params
+  variables:
+    customBackendKey: $[ stagedependencies.Retrieve_Params.Echo_Params.outputs['SetVarsStep.customBackendKey'] ]
+    customPlanName: $[ stagedependencies.Retrieve_Params.Echo_Params.outputs['SetVarsStep.customPlanName'] ]
+  jobs:
+  - job: tfapply
+    displayName: 'Terraform Apply Configuration'
+    steps:
+      - download:  sourcePipeline
+        artifact: terraformPlan
+        displayName: 'Download Terraform Plan Artifact'
+
+      - task: TerraformInstaller@1
+        displayName: 'Terraform Install'
+        inputs:
+          terraformVersion: 'latest'
+
+      - task: TerraformTask@5
+        displayName: 'Terraform init'
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: $(svc_connection)
+          backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
+          backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
+          backendAzureRmContainerName: '$(backendAzureRmContainerName)'
+          backendAzureRmKey: '$(customBackendKey)'
+          workingDirectory: '$(tf_working_dir)'
+
+      - task: TerraformTask@5
+        displayName: 'Terraform Apply'
+        inputs:
+          provider: 'azurerm'
+          command: 'apply'
+          workingDirectory: '$(tf_working_dir)'
+          commandOptions: '$(Pipeline.Workspace)/sourcePipeline/terraformPlan/$(customPlanName)'
+          environmentServiceNameAzureRM: '$(svc_connection)'
