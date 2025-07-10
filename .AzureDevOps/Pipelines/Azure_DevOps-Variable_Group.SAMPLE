@@ -1,0 +1,7 @@
+backendAzureRmContainerName         <storage_account_base_containername>
+backendAzureRmKeyBase               managed_identities/
+backendAzureRmResourceGroupName     <storage_account_resource_group>
+backendAzureRmStorageAccountName    <storage_account_name>
+subscription_id                     <storage_account_subscription_id>
+svc_connection                      <service_connection_name>
+tf_working_dir                      ./
