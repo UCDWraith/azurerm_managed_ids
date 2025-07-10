@@ -4,7 +4,7 @@ resources:
   pipelines:
   - pipeline: sourcePipeline
     source: 'tf_plan - Create Managed Identities per Subscription'
-    trigger: none  # Optional: Enable automatic triggering
+    trigger: none  # Optional: Enable automatic triggering - set as true
 
 pool:
   vmImage: ubuntu-latest
